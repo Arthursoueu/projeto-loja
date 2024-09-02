@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filmes Cadastrados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #141414;
+        }
+
+        /* Works on Firefox */
+        * {
+        scrollbar-width: thin;
+        scrollbar-color: #d8dfe5 #141414;
+        }
+
+        /* Works on Chrome, Edge, and Safari */
+        *::-webkit-scrollbar {
+        width: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+        background: #141414;
+        }
+
+        *::-webkit-scrollbar-thumb {
+        background-color: #d8dfe5;
+        border-radius: 20px;
+        border: 3px solid #141414;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+            color: #d8dfe5;
+            padding: 10px 20px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .navbar .logo {
+            flex: 1;
+            text-align: center;
+        }
+
+        .navbar .logo img {
+            height: 70px;
+            /* Ajuste o tamanho do logo conforme necessário */
+        }
+
+        .auth-links{
+            position: relative;
+            left: -35px;
+        }
+
+        .navbar .auth-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .navbar .auth-links a {
+            color: #d8dfe5;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 5px 10px;
+            border: 2px solid transparent;
+            border-radius: 5px;
+        }
+
+        .navbar .auth-links a:hover {
+            border-color: #d8dfe5;
+        }
+
+        /* Content */
+        .content {
+            margin-top: 80px;
+            /* Espaço para a navbar fixa */
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 25px;
+            color: #d8dfe5;
+        }
+
+        #carousels {
+            margin-top: 20px;
+        }
+
+        .carousel {
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .carousel h2 {
+            margin-bottom: 10px;
+            color: #d8dfe5;
+        }
+
+        .carousel-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .carousel-items {
+            display: flex;
+            transition: transform 0.5s ease;
+            white-space: nowrap;
+        }
+
+
+        .movie-item {
+            position: relative;
+            border-radius: 5px;
+            width: 200px;
+            flex-shrink: 0;
+            cursor: pointer;
+            color: white;
+            overflow: hidden; 
+            margin-right: 10px;
+        }
+
+        .movie-item img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .movie-item div {
+            position: absolute; /* Para colocar o título no fundo do item */
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.2); /* Fundo semi-transparente para o texto */
+            padding: 10px;
+            text-align: center;
+            color: white; /* Cor do texto */
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 0 0 5px 5px; /* Borda inferior arredondada */
+        }
+
+        .remove-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            cursor: pointer;
+        }
+
+        /* Popup styling */
+        .popup {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .popup.show {
+            display: block;
+            opacity: 1;
+        }
+
+        .popup-content {
+            color: #d8dfe5;
+            background-color: #141414;
+            margin: 15% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px #333;
+        }
+
+        .popup-content img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Setas de navegação */
+        .carousel-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 50%;
+            z-index: 2;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            line-height: 20px;
+        }
+
+        .carousel-control.left {
+            left: 10px;
+        }
+
+        .carousel-control.right {
+            right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="logo">
+            <img src="logo.png" alt="Logo">
+        </div>
+        <div class="auth-links">
+            <a href="./sign.html">Sign In</a>
+            <a href="#login">Login</a>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- Carrosséis divididos por gênero -->
+        <div id="carousels"></div>
+
+        <!-- Janela Modal -->
+        <div id="moviePopup" class="popup">
+            <div class="popup-content">
+                <span class="close-btn">&times;</span>
+                <img id="popupImage" src="" alt="Movie Image">
+                <h2 id="popupTitle"></h2>
+                <p><strong>Ano:</strong> <span id="popupYear"></span></p>
+                <p><strong>Biografia:</strong> <span id="popupBiography"></span></p>
+                <p><strong>Diretor:</strong> <span id="popupDirector"></span></p>
+                <p><strong>Atores Principais:</strong> <span id="popupMainActors"></span></p>
+                <p><strong>Atores Secundários:</strong> <span id="popupSecondaryActors"></span></p>
+                <p><strong>Plataforma:</strong> <span id="popupPlatform"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dbName = 'movieDB';
+        const storeName = 'movies';
+
+        // Abrir banco de dados
+        function openDB(callback) {
+            const request = indexedDB.open(dbName, 1);
+            request.onupgradeneeded = function (event) {
+                const db = event.target.result;
+                db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+            };
+            request.onsuccess = function (event) {
+                callback(event.target.result);
+            };
+            request.onerror = function (event) {
+                console.error('Erro ao abrir o banco de dados', event);
+            };
+        }
+
+        // Exibir filmes do IndexedDB
+        function displayMovies(db) {
+            const carouselsContainer = document.getElementById('carousels');
+            carouselsContainer.innerHTML = '';
+
+            const transaction = db.transaction(storeName, 'readonly');
+            const store = transaction.objectStore(storeName);
+            const request = store.getAll();
+
+            request.onsuccess = function (event) {
+                const movies = event.target.result;
+                const groupedMovies = groupMoviesByGenre(movies);
+
+                Object.keys(groupedMovies).forEach(genre => {
+                    const carousel = document.createElement('div');
+                    carousel.className = 'carousel';
+
+                    const genreTitle = document.createElement('h2');
+                    genreTitle.textContent = genre;
+                    carousel.appendChild(genreTitle);
+
+                    const carouselWrapper = document.createElement('div');
+                    carouselWrapper.className = 'carousel-wrapper';
+
+                    const carouselItems = document.createElement('div');
+                    carouselItems.className = 'carousel-items';
+
+                    groupedMovies[genre].forEach(movie => {
+                        const movieItem = document.createElement('div');
+                        movieItem.className = 'movie-item';
+                        movieItem.dataset.movieId = movie.id;
+
+                        const movieImage = document.createElement('img');
+                        movieImage.src = movie.image;
+                        movieImage.alt = movie.title;
+
+                        const movieTitle = document.createElement('div');
+                        movieTitle.textContent = movie.title;
+
+                        movieItem.appendChild(movieImage);
+                        movieItem.appendChild(movieTitle);
+                        carouselItems.appendChild(movieItem);
+
+                        // Mostrar detalhes do filme ao clicar
+                        movieItem.addEventListener('click', function () {
+                            showPopup(movie);
+                        });
+                    });
+
+                    carouselWrapper.appendChild(carouselItems);
+                    carousel.appendChild(carouselWrapper);
+                    carouselsContainer.appendChild(carousel);
+
+                    // Adicionar setas de navegação
+                    const leftArrow = document.createElement('button');
+                    leftArrow.className = 'carousel-control left';
+                    leftArrow.textContent = '<';
+                    leftArrow.addEventListener('click', function () {
+                        moveCarousel(carouselItems, -200);
+                    });
+
+                    const rightArrow = document.createElement('button');
+                    rightArrow.className = 'carousel-control right';
+                    rightArrow.textContent = '>';
+                    rightArrow.addEventListener('click', function () {
+                        moveCarousel(carouselItems, 200);
+                    });
+
+                    carousel.appendChild(leftArrow);
+                    carousel.appendChild(rightArrow);
+                });
+            };
+
+            request.onerror = function (event) {
+                console.error('Erro ao recuperar filmes', event);
+            };
+        }
+
+        // Agrupar filmes por gênero
+        function groupMoviesByGenre(movies) {
+            return movies.reduce((acc, movie) => {
+                const genre = movie.genre;
+                if (!acc[genre]) {
+                    acc[genre] = [];
+                }
+                acc[genre].push(movie);
+                return acc;
+            }, {});
+        }
+
+        // Mover carrossel
+        function moveCarousel(carouselItems, offset) {
+            const currentTransform = getCurrentTransform(carouselItems);
+            carouselItems.style.transform = `translateX(${currentTransform + offset}px)`;
+        }
+
+        function getCurrentTransform(element) {
+            const style = window.getComputedStyle(element);
+            const matrix = style.transform || style.webkitTransform || style.mozTransform || style.msTransform || style.oTransform || 'matrix(1, 0, 0, 1, 0, 0)';
+            const values = matrix.split('(')[1].split(')')[0].split(',');
+            return parseFloat(values[4]);
+        }
+
+        // Mostrar popup com detalhes do filme
+        function showPopup(movie) {
+            document.getElementById('moviePopup').classList.add('show');
+            document.getElementById('popupImage').src = movie.image;
+            document.getElementById('popupTitle').textContent = movie.title;
+            document.getElementById('popupYear').textContent = movie.year;
+            document.getElementById('popupBiography').textContent = movie.biography;
+            document.getElementById('popupDirector').textContent = movie.director;
+            document.getElementById('popupMainActors').textContent = movie.mainActors;
+            document.getElementById('popupSecondaryActors').textContent = movie.secondaryActors;
+            document.getElementById('popupPlatform').textContent = movie.platform;
+        }
+
+        // Fechar popup
+        function closePopup() {
+            document.getElementById('moviePopup').classList.remove('show');
+        }
+
+        document.querySelector('.close-btn').addEventListener('click', closePopup);
+        window.addEventListener('click', function (event) {
+            if (event.target === document.getElementById('moviePopup')) {
+                closePopup();
+            }
+        });
+
+        // Inicializar a página
+        openDB(displayMovies);
+    </script>
+</body>
+
+</html>
